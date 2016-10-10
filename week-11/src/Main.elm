@@ -99,8 +99,7 @@ view model =
             [ label [] [ text "X", input [ type' "text", onInput SetX, value (toString model.x) ] [] ]
             , label [] [ text "Y", input [ type' "text", onInput SetY, value (toString model.y) ] [] ]
             , label [] [ text "Radius", input [ type' "text", onInput SetSize, value (toString model.radius) ] [] ]
-            , label [] [ text "Start", input [ type' "text", onInput SetStart, value (toString model.start) ] [] ]
-            , label [] [ text "End", input [ type' "text", onInput SetEnd, value (toString model.end) ] [] ]
+            , label [] [ text "Arc", input [ type' "range", Html.Attributes.min "0", Html.Attributes.max "360", onInput SetEnd, value (toString model.end) ] [] ]
             , fieldset []
                 [ label [] [ input [ type' "radio", onClick (SetLineType Solid), checked (model.line == Solid) ] [], text "Solid" ]
                 , label [] [ input [ type' "radio", onClick (SetLineType Dotted), checked (model.line == Dotted) ] [], text "Dotted" ]
@@ -160,6 +159,6 @@ isInArc : Model -> Point -> Bool
 isInArc model point =
     let
         a_degrees =
-            (snd (toPolar ( toFloat (fst point), toFloat (snd point) )))
+            ((snd (toPolar ( toFloat (fst point), toFloat (snd point) ))) * 180 / Basics.pi) + 180
     in
-        a_degrees >= (toFloat (model.start - 180)) && a_degrees < (toFloat (model.end - 180))
+        a_degrees >= (toFloat (model.start)) && a_degrees < (toFloat (model.end))
