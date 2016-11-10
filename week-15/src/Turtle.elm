@@ -1,10 +1,11 @@
-module Turtle exposing (..)
+module Turtle exposing (Action(..), Point, Line, lines)
 
 import Array exposing (..)
 import List exposing (..)
-import Color exposing (..)
 
 
+{-| The actions the turtle can perform
+-}
 type Action
     = Forward Int
     | Left Int
@@ -12,6 +13,10 @@ type Action
     | PenDown
     | PenUp
     | Color String
+    | Width Int
+    | Push
+    | Pop
+    | Scale Float
 
 
 type alias Point =
@@ -22,59 +27,110 @@ type alias Line =
     { start : Point
     , end : Point
     , color : String
+    , width : Int
     }
 
 
 type alias State =
     { lines : Array Line
-    , penDown : Bool
-    , currentLocation : Point
-    , heading : Int
-    , currentColor : String
+    , currentState : List TurtleState
     }
 
 
+type alias TurtleState =
+    { penDown : Bool
+    , currentLocation : Point
+    , heading : Int
+    , currentColor : String
+    , currentWidth : Int
+    , currentScale : Float
+    }
+
+
+{-| Get the current TurtleState from the "global" State
+-}
+currentState : State -> TurtleState
+currentState state =
+    Maybe.withDefault initialState (head state.currentState)
+
+
+{-| Create a new State where the current TurtleState is replaced
+-}
+newState state new =
+    { state | currentState = new :: (drop 1 state.currentState) }
+
+
+{-| Evaluate a single action
+-}
 eval : Action -> State -> State
 eval action state =
-    case action of
-        Forward distance ->
-            let
-                current =
-                    state.currentLocation
+    let
+        current =
+            currentState state
+    in
+        case action of
+            Forward d ->
+                let
+                    location =
+                        current.currentLocation
 
-                dx =
-                    round ((toFloat distance) * sin (degrees (toFloat state.heading)))
+                    distance =
+                        round (current.currentScale * (toFloat d))
 
-                dy =
-                    round ((toFloat distance) * cos (degrees (toFloat state.heading)))
+                    dx =
+                        round ((toFloat distance) * sin (degrees (toFloat current.heading)))
 
-                new =
-                    { x = current.x + dx, y = current.y + dy }
-            in
-                if state.penDown then
-                    { state | currentLocation = new, lines = push { start = current, end = new, color = state.currentColor } state.lines }
-                else
-                    { state | currentLocation = new }
+                    dy =
+                        round ((toFloat distance) * cos (degrees (toFloat current.heading)))
 
-        Left angle ->
-            { state | heading = (state.heading - angle + 360) % 360 }
+                    new =
+                        { x = location.x + dx, y = location.y + dy }
 
-        Right angle ->
-            { state | heading = (state.heading + angle + 360) % 360 }
+                    w =
+                        round (current.currentScale * (toFloat current.currentWidth))
+                in
+                    if current.penDown then
+                        newState
+                            { state
+                                | lines = push { start = location, end = new, color = current.currentColor, width = w } state.lines
+                            }
+                            { current | currentLocation = new }
+                    else
+                        newState state { current | currentLocation = new }
 
-        PenUp ->
-            { state | penDown = False }
+            Left angle ->
+                newState state { current | heading = (current.heading + angle + 360) % 360 }
 
-        PenDown ->
-            { state | penDown = True }
+            Right angle ->
+                newState state { current | heading = (current.heading - angle + 360) % 360 }
 
-        Color c ->
-            { state | currentColor = c }
+            PenUp ->
+                newState state { current | penDown = False }
+
+            PenDown ->
+                newState state { current | penDown = True }
+
+            Color c ->
+                newState state { current | currentColor = c }
+
+            Width w ->
+                newState state { current | currentWidth = w }
+
+            Push ->
+                { state | currentState = current :: state.currentState }
+
+            Pop ->
+                { state | currentState = (drop 1 state.currentState) }
+
+            Scale s ->
+                newState state { current | currentScale = s }
 
 
+{-| Evaluate a list of actions
+-}
 fold : List Action -> State
 fold actions =
-    foldState actions initialState
+    foldState actions { lines = Array.empty, currentState = [] }
 
 
 foldState : List Action -> State -> State
@@ -82,16 +138,19 @@ foldState actions state =
     List.foldl eval state actions
 
 
-initialState : State
+initialState : TurtleState
 initialState =
-    { lines = Array.empty
-    , penDown = True
+    { penDown = True
     , currentLocation = { x = 0, y = 0 }
     , heading = 0
     , currentColor = "black"
+    , currentWidth = 1
+    , currentScale = 1.0
     }
 
 
+{-| Get the lines created by a list of actions
+-}
 lines : List Action -> List Line
 lines actions =
     (toList (fold actions).lines)
