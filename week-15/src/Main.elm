@@ -6,6 +6,7 @@ import Html.App exposing (program)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Turtle exposing (..)
+import Debug exposing (log)
 
 
 main : Program Never
@@ -39,7 +40,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ Svg.svg [ viewBox "0 0 1000 1000", Svg.Attributes.width "1000px" ]
+        [ Svg.svg [ viewBox "0 0 500 500", Svg.Attributes.width "500px" ]
             (List.map
                 toSvgLine
                 (lines actions)
@@ -86,7 +87,7 @@ toSvgLine : Turtle.Line -> Svg.Svg msg
 toSvgLine l =
     let
         to =
-            { x = 500, y = 500 }
+            { x = 250, y = 250 }
 
         start =
             transform to l.start
@@ -109,12 +110,14 @@ toSvgLine l =
 lines : List Action -> List Turtle.Line
 lines actions =
     Turtle.lines
-        (List.concat
-            [ [ Push ]
-            , actions
-            , [ Pop, Scale 3, PenUp, Left 90, Forward 50, Right 90, PenDown ]
-            , actions
-            ]
+        (log "Generating lines from actions"
+            (List.concat
+                [ [ Push ]
+                , actions
+                , [ Pop, Scale 3, PenUp, Left 90, Forward 50, Right 90, PenDown ]
+                , actions
+                ]
+            )
         )
 
 

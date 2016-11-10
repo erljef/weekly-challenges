@@ -8,7 +8,7 @@ import Json.Decode exposing (succeed)
 import LSystem exposing (..)
 import Platform exposing (..)
 import Result exposing (..)
-import String exposing (..)
+import String exposing (toUpper, toInt)
 import Svg exposing (svg, line)
 import Svg.Attributes exposing (viewBox, fill, stroke, x1, x2, y1, y2)
 import Turtle exposing (..)
@@ -46,9 +46,9 @@ type Msg
 init : ( Model, Cmd Msg )
 init =
     ( { initialTokenString = "FX"
-      , rules = []
+      , rules = [ { token = 'X', replacement = (tokenList "X+YF+") }, { token = 'Y', replacement = (tokenList "-FX-Y") } ]
       , system = (tokenList "FX")
-      , iterations = 1
+      , iterations = 0
       , ruleInput = Nothing
       , angle = 90
       }
@@ -125,6 +125,11 @@ view : Model -> Html Msg
 view model =
     div []
         [ div []
+            [ text "This is a highly inefficient rendering of an L-System. 17 iterations for the dragon curve takes ~5-10 seconds."
+            , br [] []
+            , text (" Allowed tokens: " ++ (tokenString allowedTokens))
+            ]
+        , div []
             [ label [ for "initial" ] [ text "Initial tokens" ]
             , input [ id "initial", value model.initialTokenString, onInput SetInitialToken ] []
             ]
@@ -177,14 +182,39 @@ toLines tokens =
 
 transform : Point -> Point -> Point
 transform to from =
-    { x = from.x + to.x, y = from.y + to.y }
+    let
+        rotated =
+            rotate 180 from
+    in
+        { x = rotated.x + to.x, y = rotated.y + to.y }
+
+
+rotate : Int -> Point -> Point
+rotate angle point =
+    let
+        rad =
+            degrees (toFloat angle)
+
+        x =
+            toFloat point.x
+
+        y =
+            toFloat point.y
+
+        newX =
+            round (x * (cos rad) - y * (sin rad))
+
+        newY =
+            round (y * (cos rad) + x * (sin rad))
+    in
+        { x = newX, y = newY }
 
 
 toSvgLine : Line -> Svg.Svg msg
 toSvgLine l =
     let
         to =
-            { x = 250, y = 250 }
+            { x = 500, y = 500 }
 
         start =
             transform to l.start
