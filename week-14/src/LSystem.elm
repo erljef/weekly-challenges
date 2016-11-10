@@ -20,6 +20,11 @@ type alias Iterations =
     }
 
 
+lsystem : List Token -> List Rule -> Int -> List Token
+lsystem tokens rules iterations =
+    generate tokens rules { current = 0, target = iterations }
+
+
 generate : List Token -> List Rule -> Iterations -> List Token
 generate tokens rules iterations =
     if iterations.current == iterations.target then

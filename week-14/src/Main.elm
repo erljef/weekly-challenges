@@ -9,7 +9,9 @@ import LSystem exposing (..)
 import Platform exposing (..)
 import Result exposing (..)
 import String exposing (..)
-import Time exposing (..)
+import Svg exposing (svg, line)
+import Svg.Attributes exposing (viewBox, fill, stroke, x1, x2, y1, y2)
+import Turtle exposing (..)
 
 
 main : Program Never
@@ -26,7 +28,6 @@ type alias Model =
     { initialTokenString : String
     , rules : List Rule
     , system : List Token
-    , currentIteration : Int
     , iterations : Int
     , ruleInput : Maybe Rule
     , angle : Int
@@ -34,8 +35,7 @@ type alias Model =
 
 
 type Msg
-    = Tick Time
-    | SetInitialToken String
+    = SetInitialToken String
     | SetRule String
     | AddRule
     | RemoveRule String
@@ -48,8 +48,7 @@ init =
     ( { initialTokenString = "FX"
       , rules = []
       , system = (tokenList "FX")
-      , currentIteration = 0
-      , iterations = 17
+      , iterations = 1
       , ruleInput = Nothing
       , angle = 90
       }
@@ -67,8 +66,7 @@ update msg model =
             in
                 ( { model
                     | initialTokenString = filteredString
-                    , system = (tokenList filteredString)
-                    , currentIteration = 0
+                    , system = lsystem (tokenList filteredString) model.rules model.iterations
                   }
                 , Cmd.none
                 )
@@ -86,8 +84,7 @@ update msg model =
                     ( { model
                         | rules = rule :: model.rules
                         , ruleInput = Nothing
-                        , system = (tokenList model.initialTokenString)
-                        , currentIteration = 0
+                        , system = lsystem (tokenList model.initialTokenString) model.rules model.iterations
                       }
                     , Cmd.none
                     )
@@ -98,40 +95,30 @@ update msg model =
         RemoveRule rule ->
             ( { model
                 | rules = List.filter (\item -> (ruleString item) /= rule) model.rules
-                , system = (tokenList model.initialTokenString)
-                , currentIteration = 0
+                , system = lsystem (tokenList model.initialTokenString) model.rules model.iterations
               }
             , Cmd.none
             )
 
         SetIterations i ->
-            ( { model
-                | iterations = (withDefault 0 (toInt i))
-                , system = (tokenList model.initialTokenString)
-                , currentIteration = 0
-              }
-            , Cmd.none
-            )
+            let
+                newIterations =
+                    (withDefault 0 (toInt i))
+            in
+                ( { model
+                    | iterations = newIterations
+                    , system = lsystem (tokenList model.initialTokenString) model.rules newIterations
+                  }
+                , Cmd.none
+                )
 
         SetAngle a ->
             ( { model
                 | angle = (withDefault 90 (toInt a))
-                , system = (tokenList model.initialTokenString)
-                , currentIteration = 0
+                , system = lsystem (tokenList model.initialTokenString) model.rules model.iterations
               }
             , Cmd.none
             )
-
-        Tick _ ->
-            if model.currentIteration < model.iterations then
-                ( { model
-                    | system = replace model.system model.rules
-                    , currentIteration = model.currentIteration + 1
-                  }
-                , Cmd.none
-                )
-            else
-                ( model, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -158,12 +145,54 @@ view model =
             [ ul [] (List.map ruleItem model.rules)
             ]
         , div []
-            [ text (toString model.currentIteration)
-            ]
-        , div []
-            [ text (tokenString model.system)
+            [ Svg.svg [ viewBox "0 0 1000 1000", Svg.Attributes.width "1000px" ]
+                (List.map
+                    toSvgLine
+                    (toLines model.system)
+                )
             ]
         ]
+
+
+toAction : Token -> Maybe Action
+toAction token =
+    case token of
+        'F' ->
+            Just (Forward 1)
+
+        '+' ->
+            Just (Right 90)
+
+        '-' ->
+            Just (Left 90)
+
+        _ ->
+            Nothing
+
+
+toLines : List Token -> List Line
+toLines tokens =
+    Turtle.lines (List.filterMap toAction tokens)
+
+
+transform : Point -> Point -> Point
+transform to from =
+    { x = from.x + to.x, y = from.y + to.y }
+
+
+toSvgLine : Line -> Svg.Svg msg
+toSvgLine l =
+    let
+        to =
+            { x = 250, y = 250 }
+
+        start =
+            transform to (fst l)
+
+        end =
+            transform to (snd l)
+    in
+        Svg.line [ fill "none", stroke "black", x1 (toString start.x), x2 (toString end.x), y1 (toString start.y), y2 (toString end.y) ] []
 
 
 ruleItem : Rule -> Html Msg
@@ -188,4 +217,4 @@ allowedTokens =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every (100 * millisecond) Tick
+    Sub.none

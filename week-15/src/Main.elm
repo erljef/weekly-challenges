@@ -1,7 +1,10 @@
 module Main exposing (main)
 
+import Array exposing (..)
 import Html exposing (..)
 import Html.App exposing (program)
+import Svg exposing (..)
+import Svg.Attributes exposing (..)
 import Turtle exposing (..)
 
 
@@ -35,7 +38,13 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div [] [ text lines ]
+    div []
+        [ Svg.svg [ viewBox "0 0 500 500", Svg.Attributes.width "500px" ]
+            (List.map
+                toSvgLine
+                lines
+            )
+        ]
 
 
 subscriptions : Model -> Sub Msg
@@ -43,6 +52,26 @@ subscriptions model =
     Sub.none
 
 
-lines : String
+transform : Point -> Point -> Point
+transform to from =
+    { x = from.x + to.x, y = from.y + to.y }
+
+
+toSvgLine : Line -> Svg.Svg msg
+toSvgLine l =
+    let
+        to =
+            { x = 250, y = 250 }
+
+        start =
+            transform to (fst l)
+
+        end =
+            transform to (snd l)
+    in
+        Svg.line [ fill "none", stroke "black", x1 (toString start.x), x2 (toString end.x), y1 (toString start.y), y2 (toString end.y) ] []
+
+
+lines : List Line
 lines =
-    toString (Turtle.fold [ Forward 10, Right 90, Forward 10, Right 90, Forward 10, Right 90, Forward 10, Right 90 ])
+    Turtle.lines [ Forward 10, Right 90, Forward 10, Right 90, Forward 10, Right 90, Forward 10, Right 90 ]

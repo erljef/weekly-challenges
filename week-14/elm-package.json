@@ -4,7 +4,8 @@
   "repository": "https://github.com/erljef/weekly-challenges.git",
   "license": "WTFPL",
   "source-directories": [
-    "src"
+    "src",
+    "../week-15/src/"
   ],
   "exposed-modules": [],
   "dependencies": {

@@ -80,3 +80,8 @@ initialState =
     , currentLocation = { x = 0, y = 0 }
     , heading = 0
     }
+
+
+lines : List Action -> List Line
+lines actions =
+    (toList (fold actions).lines)
