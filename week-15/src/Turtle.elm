@@ -2,6 +2,7 @@ module Turtle exposing (..)
 
 import Array exposing (..)
 import List exposing (..)
+import Color exposing (..)
 
 
 type Action
@@ -10,6 +11,7 @@ type Action
     | Right Int
     | PenDown
     | PenUp
+    | Color String
 
 
 type alias Point =
@@ -17,7 +19,10 @@ type alias Point =
 
 
 type alias Line =
-    ( Point, Point )
+    { start : Point
+    , end : Point
+    , color : String
+    }
 
 
 type alias State =
@@ -25,6 +30,7 @@ type alias State =
     , penDown : Bool
     , currentLocation : Point
     , heading : Int
+    , currentColor : String
     }
 
 
@@ -46,7 +52,7 @@ eval action state =
                     { x = current.x + dx, y = current.y + dy }
             in
                 if state.penDown then
-                    { state | currentLocation = new, lines = push ( current, new ) state.lines }
+                    { state | currentLocation = new, lines = push { start = current, end = new, color = state.currentColor } state.lines }
                 else
                     { state | currentLocation = new }
 
@@ -61,6 +67,9 @@ eval action state =
 
         PenDown ->
             { state | penDown = True }
+
+        Color c ->
+            { state | currentColor = c }
 
 
 fold : List Action -> State
@@ -79,6 +88,7 @@ initialState =
     , penDown = True
     , currentLocation = { x = 0, y = 0 }
     , heading = 0
+    , currentColor = "black"
     }
 
 

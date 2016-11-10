@@ -187,10 +187,10 @@ toSvgLine l =
             { x = 250, y = 250 }
 
         start =
-            transform to (fst l)
+            transform to l.start
 
         end =
-            transform to (snd l)
+            transform to l.end
     in
         Svg.line [ fill "none", stroke "black", x1 (toString start.x), x2 (toString end.x), y1 (toString start.y), y2 (toString end.y) ] []
 

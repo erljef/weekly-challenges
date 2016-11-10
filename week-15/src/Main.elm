@@ -18,6 +18,13 @@ main =
         }
 
 
+type alias Line l =
+    { l
+        | start : Point
+        , end : Point
+    }
+
+
 type alias Model =
     {}
 
@@ -57,21 +64,21 @@ transform to from =
     { x = from.x + to.x, y = from.y + to.y }
 
 
-toSvgLine : Line -> Svg.Svg msg
+toSvgLine : Turtle.Line -> Svg.Svg msg
 toSvgLine l =
     let
         to =
             { x = 250, y = 250 }
 
         start =
-            transform to (fst l)
+            transform to l.start
 
         end =
-            transform to (snd l)
+            transform to l.end
     in
-        Svg.line [ fill "none", stroke "black", x1 (toString start.x), x2 (toString end.x), y1 (toString start.y), y2 (toString end.y) ] []
+        Svg.line [ fill "none", stroke l.color, x1 (toString start.x), x2 (toString end.x), y1 (toString start.y), y2 (toString end.y) ] []
 
 
-lines : List Line
+lines : List Turtle.Line
 lines =
-    Turtle.lines [ Forward 10, Right 90, Forward 10, Right 90, Forward 10, Right 90, Forward 10, Right 90 ]
+    Turtle.lines [ Forward 10, Right 90, Color "red", Forward 10, Right 90, Color "blue", Forward 10, Right 90, Color "green", Forward 10, Right 90 ]
