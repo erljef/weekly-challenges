@@ -7976,24 +7976,27 @@ var _erljef$weekly_challenges$Main$actions = _elm_lang$core$Native_List.fromArra
 	]);
 var _erljef$weekly_challenges$Main$lines = function (actions) {
 	return _erljef$weekly_challenges$Turtle$lines(
-		_elm_lang$core$List$concat(
-			_elm_lang$core$Native_List.fromArray(
-				[
-					_elm_lang$core$Native_List.fromArray(
-					[_erljef$weekly_challenges$Turtle$Push]),
-					actions,
-					_elm_lang$core$Native_List.fromArray(
+		A2(
+			_elm_lang$core$Debug$log,
+			'Generating lines from actions',
+			_elm_lang$core$List$concat(
+				_elm_lang$core$Native_List.fromArray(
 					[
-						_erljef$weekly_challenges$Turtle$Pop,
-						_erljef$weekly_challenges$Turtle$Scale(3),
-						_erljef$weekly_challenges$Turtle$PenUp,
-						_erljef$weekly_challenges$Turtle$Left(90),
-						_erljef$weekly_challenges$Turtle$Forward(50),
-						_erljef$weekly_challenges$Turtle$Right(90),
-						_erljef$weekly_challenges$Turtle$PenDown
-					]),
-					actions
-				])));
+						_elm_lang$core$Native_List.fromArray(
+						[_erljef$weekly_challenges$Turtle$Push]),
+						actions,
+						_elm_lang$core$Native_List.fromArray(
+						[
+							_erljef$weekly_challenges$Turtle$Pop,
+							_erljef$weekly_challenges$Turtle$Scale(3),
+							_erljef$weekly_challenges$Turtle$PenUp,
+							_erljef$weekly_challenges$Turtle$Left(90),
+							_erljef$weekly_challenges$Turtle$Forward(50),
+							_erljef$weekly_challenges$Turtle$Right(90),
+							_erljef$weekly_challenges$Turtle$PenDown
+						]),
+						actions
+					]))));
 };
 var _erljef$weekly_challenges$Main$rotate = F2(
 	function (angle, point) {
@@ -8013,7 +8016,7 @@ var _erljef$weekly_challenges$Main$transform = F2(
 		return {x: rotated.x + to.x, y: rotated.y + to.y};
 	});
 var _erljef$weekly_challenges$Main$toSvgLine = function (l) {
-	var to = {x: 500, y: 500};
+	var to = {x: 250, y: 250};
 	var start = A2(_erljef$weekly_challenges$Main$transform, to, l.start);
 	var end = A2(_erljef$weekly_challenges$Main$transform, to, l.end);
 	return A2(
@@ -8050,8 +8053,8 @@ var _erljef$weekly_challenges$Main$view = function (model) {
 				_elm_lang$svg$Svg$svg,
 				_elm_lang$core$Native_List.fromArray(
 					[
-						_elm_lang$svg$Svg_Attributes$viewBox('0 0 1000 1000'),
-						_elm_lang$svg$Svg_Attributes$width('1000px')
+						_elm_lang$svg$Svg_Attributes$viewBox('0 0 500 500'),
+						_elm_lang$svg$Svg_Attributes$width('500px')
 					]),
 				A2(
 					_elm_lang$core$List$map,

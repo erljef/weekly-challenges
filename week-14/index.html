@@ -8526,12 +8526,25 @@ var _erljef$weekly_challenges$Main$isAllowed = function (token) {
 var _erljef$weekly_challenges$Main$tokenString = function (tokens) {
 	return _elm_lang$core$String$fromList(tokens);
 };
+var _erljef$weekly_challenges$Main$rotate = F2(
+	function (angle, point) {
+		var y = _elm_lang$core$Basics$toFloat(point.y);
+		var x = _elm_lang$core$Basics$toFloat(point.x);
+		var rad = _elm_lang$core$Basics$degrees(
+			_elm_lang$core$Basics$toFloat(angle));
+		var newX = _elm_lang$core$Basics$round(
+			(x * _elm_lang$core$Basics$cos(rad)) - (y * _elm_lang$core$Basics$sin(rad)));
+		var newY = _elm_lang$core$Basics$round(
+			(y * _elm_lang$core$Basics$cos(rad)) + (x * _elm_lang$core$Basics$sin(rad)));
+		return {x: newX, y: newY};
+	});
 var _erljef$weekly_challenges$Main$transform = F2(
 	function (to, from) {
-		return {x: from.x + to.x, y: from.y + to.y};
+		var rotated = A2(_erljef$weekly_challenges$Main$rotate, 180, from);
+		return {x: rotated.x + to.x, y: rotated.y + to.y};
 	});
 var _erljef$weekly_challenges$Main$toSvgLine = function (l) {
-	var to = {x: 250, y: 250};
+	var to = {x: 500, y: 500};
 	var start = A2(_erljef$weekly_challenges$Main$transform, to, l.start);
 	var end = A2(_erljef$weekly_challenges$Main$transform, to, l.end);
 	return A2(
@@ -8692,9 +8705,18 @@ var _erljef$weekly_challenges$Main$init = {
 	_0: {
 		initialTokenString: 'FX',
 		rules: _elm_lang$core$Native_List.fromArray(
-			[]),
+			[
+				{
+				token: _elm_lang$core$Native_Utils.chr('X'),
+				replacement: _erljef$weekly_challenges$LSystem$tokenList('X+YF+')
+			},
+				{
+				token: _elm_lang$core$Native_Utils.chr('Y'),
+				replacement: _erljef$weekly_challenges$LSystem$tokenList('-FX-Y')
+			}
+			]),
 		system: _erljef$weekly_challenges$LSystem$tokenList('FX'),
-		iterations: 1,
+		iterations: 0,
 		ruleInput: _elm_lang$core$Maybe$Nothing,
 		angle: 90
 	},
@@ -8753,6 +8775,25 @@ var _erljef$weekly_challenges$Main$view = function (model) {
 			[]),
 		_elm_lang$core$Native_List.fromArray(
 			[
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text('This is a highly inefficient rendering of an L-System. 17 iterations for the dragon curve takes ~5-10 seconds.'),
+						A2(
+						_elm_lang$html$Html$br,
+						_elm_lang$core$Native_List.fromArray(
+							[]),
+						_elm_lang$core$Native_List.fromArray(
+							[])),
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							' Allowed tokens: ',
+							_erljef$weekly_challenges$Main$tokenString(_erljef$weekly_challenges$Main$allowedTokens)))
+					])),
 				A2(
 				_elm_lang$html$Html$div,
 				_elm_lang$core$Native_List.fromArray(
