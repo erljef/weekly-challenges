@@ -7,27 +7,27 @@ import List exposing (..)
 {-| The actions the turtle can perform
 -}
 type Action
-    = Forward Int
+    = Forward Float
     | Left Int
     | Right Int
     | PenDown
     | PenUp
     | Color String
-    | Width Int
+    | Width Float
     | Push
     | Pop
     | Scale Float
 
 
 type alias Point =
-    { x : Int, y : Int }
+    { x : Float, y : Float }
 
 
 type alias Line =
     { start : Point
     , end : Point
     , color : String
-    , width : Int
+    , width : Float
     }
 
 
@@ -42,7 +42,7 @@ type alias TurtleState =
     , currentLocation : Point
     , heading : Int
     , currentColor : String
-    , currentWidth : Int
+    , currentWidth : Float
     , currentScale : Float
     }
 
@@ -75,19 +75,19 @@ eval action state =
                         current.currentLocation
 
                     distance =
-                        round (current.currentScale * (toFloat d))
+                        current.currentScale * d
 
                     dx =
-                        round ((toFloat distance) * sin (degrees (toFloat current.heading)))
+                        distance * sin (degrees (toFloat current.heading))
 
                     dy =
-                        round ((toFloat distance) * cos (degrees (toFloat current.heading)))
+                        distance * cos (degrees (toFloat current.heading))
 
                     new =
                         { x = location.x + dx, y = location.y + dy }
 
                     w =
-                        round (current.currentScale * (toFloat current.currentWidth))
+                        current.currentScale * current.currentWidth
                 in
                     if current.penDown then
                         newState
@@ -141,10 +141,10 @@ foldState actions state =
 initialState : TurtleState
 initialState =
     { penDown = True
-    , currentLocation = { x = 0, y = 0 }
+    , currentLocation = { x = 0.0, y = 0.0 }
     , heading = 0
     , currentColor = "black"
-    , currentWidth = 1
+    , currentWidth = 1.0
     , currentScale = 1.0
     }
 

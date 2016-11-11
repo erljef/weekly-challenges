@@ -7,6 +7,8 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Turtle exposing (..)
 import Debug exposing (log)
+import Window exposing (..)
+import Task exposing (perform)
 
 
 main : Program Never
@@ -20,37 +22,43 @@ main =
 
 
 type alias Model =
-    {}
+    { windowHeight : Int
+    , windowWidth : Int
+    }
 
 
 type Msg
-    = Msg
+    = WindowSize Int Int
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( {}, Cmd.none )
+    ( { windowHeight = 0, windowWidth = 0 }
+    , Task.perform (\_ -> WindowSize 0 0) (\{ height, width } -> WindowSize height width) Window.size
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        WindowSize h w ->
+            ( { model | windowHeight = h - 50, windowWidth = w - 50 }, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
     div []
-        [ Svg.svg [ viewBox "0 0 500 500", Svg.Attributes.width "500px" ]
+        [ Svg.svg [ Svg.Attributes.width (toString model.windowWidth), Svg.Attributes.height (toString model.windowHeight) ]
             (List.map
-                toSvgLine
-                (lines actions)
+                (toSvgLine { x = (toFloat model.windowWidth) / 2, y = (toFloat model.windowHeight) / 2 })
+                (Turtle.lines (circleAndSquare 1 108 10 0.97 []))
             )
         ]
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Window.resizes (\{ height, width } -> WindowSize height width)
 
 
 transform : Point -> Point -> Point
@@ -63,37 +71,28 @@ transform to from =
 
 
 rotate : Int -> Point -> Point
-rotate angle point =
+rotate angle { x, y } =
     let
         rad =
             degrees (toFloat angle)
 
-        x =
-            toFloat point.x
-
-        y =
-            toFloat point.y
-
         newX =
-            round (x * (cos rad) - y * (sin rad))
+            x * (cos rad) - y * (sin rad)
 
         newY =
-            round (y * (cos rad) + x * (sin rad))
+            y * (cos rad) + x * (sin rad)
     in
         { x = newX, y = newY }
 
 
-toSvgLine : Turtle.Line -> Svg.Svg msg
-toSvgLine l =
+toSvgLine : Point -> Turtle.Line -> Svg.Svg msg
+toSvgLine origo l =
     let
-        to =
-            { x = 250, y = 250 }
-
         start =
-            transform to l.start
+            transform origo l.start
 
         end =
-            transform to l.end
+            transform origo l.end
     in
         Svg.line
             [ fill "none"
@@ -107,42 +106,18 @@ toSvgLine l =
             []
 
 
-lines : List Action -> List Turtle.Line
-lines actions =
-    Turtle.lines
-        (log "Generating lines from actions"
-            (List.concat
-                [ [ Push ]
-                , actions
-                , [ Pop, Scale 3, PenUp, Left 90, Forward 50, Right 90, PenDown ]
-                , actions
-                ]
-            )
-        )
+square : List Action
+square =
+    List.concat (List.repeat 4 [ Forward 200, Right 90 ])
 
 
-actions : List Action
-actions =
-    [ Width 1
-    , Forward 30
-    , Right 90
-    , Color "red"
-    , Push
-    , Width 2
-    , Forward 30
-    , Right 90
-    , Color "blue"
-    , Width 3
-    , Forward 30
-    , Right 90
-    , Color "green"
-    , Width 4
-    , Forward 30
-    , Pop
-    , PenUp
-    , Left 90
-    , Forward 30
-    , PenDown
-    , Right 45
-    , Forward 30
-    ]
+circleAndSquare : Int -> Int -> Int -> Float -> List Action -> List Action
+circleAndSquare current total angle s actions =
+    if current == total then
+        actions
+    else
+        let
+            newSquare =
+                List.append square [ Left angle, Scale (s ^ (toFloat current)) ]
+        in
+            circleAndSquare (current + 1) total angle s (List.append actions newSquare)

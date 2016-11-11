@@ -12,6 +12,8 @@ import String exposing (toUpper, toInt)
 import Svg exposing (svg, line)
 import Svg.Attributes exposing (viewBox, fill, stroke, x1, x2, y1, y2)
 import Turtle exposing (..)
+import Window exposing (..)
+import Task exposing (perform)
 
 
 main : Program Never
@@ -25,7 +27,9 @@ main =
 
 
 type alias Model =
-    { initialTokenString : String
+    { canvasHeight : Int
+    , canvasWidth : Int
+    , initialTokenString : String
     , rules : List Rule
     , system : List Token
     , iterations : Int
@@ -35,7 +39,8 @@ type alias Model =
 
 
 type Msg
-    = SetInitialToken String
+    = WindowSize Int Int
+    | SetInitialToken String
     | SetRule String
     | AddRule
     | RemoveRule String
@@ -45,20 +50,30 @@ type Msg
 
 init : ( Model, Cmd Msg )
 init =
-    ( { initialTokenString = "FX"
+    ( { canvasHeight = 0
+      , canvasWidth = 0
+      , initialTokenString = "FX"
       , rules = [ { token = 'X', replacement = (tokenList "X+YF+") }, { token = 'Y', replacement = (tokenList "-FX-Y") } ]
       , system = (tokenList "FX")
       , iterations = 0
       , ruleInput = Nothing
       , angle = 90
       }
-    , Cmd.none
+    , Task.perform (\_ -> WindowSize 0 0) (\{ height, width } -> WindowSize height width) Window.size
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        WindowSize h w ->
+            ( { model
+                | canvasHeight = h - 200
+                , canvasWidth = w - 100
+              }
+            , Cmd.none
+            )
+
         SetInitialToken str ->
             let
                 filteredString =
@@ -150,9 +165,9 @@ view model =
             [ ul [] (List.map ruleItem model.rules)
             ]
         , div []
-            [ Svg.svg [ viewBox "0 0 1000 1000", Svg.Attributes.width "1000px" ]
+            [ Svg.svg [ Svg.Attributes.width (toString model.canvasWidth), Svg.Attributes.height (toString model.canvasHeight) ]
                 (List.map
-                    toSvgLine
+                    (toSvgLine { x = (toFloat model.canvasWidth) / 2, y = (toFloat model.canvasHeight) / 2 })
                     (toLines model.system)
                 )
             ]
@@ -190,37 +205,28 @@ transform to from =
 
 
 rotate : Int -> Point -> Point
-rotate angle point =
+rotate angle { x, y } =
     let
         rad =
             degrees (toFloat angle)
 
-        x =
-            toFloat point.x
-
-        y =
-            toFloat point.y
-
         newX =
-            round (x * (cos rad) - y * (sin rad))
+            x * (cos rad) - y * (sin rad)
 
         newY =
-            round (y * (cos rad) + x * (sin rad))
+            y * (cos rad) + x * (sin rad)
     in
         { x = newX, y = newY }
 
 
-toSvgLine : Line -> Svg.Svg msg
-toSvgLine l =
+toSvgLine : Point -> Line -> Svg.Svg msg
+toSvgLine center l =
     let
-        to =
-            { x = 500, y = 500 }
-
         start =
-            transform to l.start
+            transform center l.start
 
         end =
-            transform to l.end
+            transform center l.end
     in
         Svg.line [ fill "none", stroke "black", x1 (toString start.x), x2 (toString end.x), y1 (toString start.y), y2 (toString end.y) ] []
 
@@ -247,4 +253,4 @@ allowedTokens =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Window.resizes (\{ height, width } -> WindowSize height width)
