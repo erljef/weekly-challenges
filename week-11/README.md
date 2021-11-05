@@ -9,4 +9,4 @@ Usage:
 
 and open a browser at http://localhost:8000/src/Main.elm
 
-or http://erljef.github.com/weekly-challenges/week-11/
+or http://erljef.github.io/weekly-challenges/week-11/
